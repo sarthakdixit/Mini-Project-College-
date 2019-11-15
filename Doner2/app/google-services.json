@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "571005714412",
+    "firebase_url": "https://doner-3f4a0.firebaseio.com",
+    "project_id": "doner-3f4a0",
+    "storage_bucket": "doner-3f4a0.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:571005714412:android:5f2f0ce98cdcbcb0278ac9",
+        "android_client_info": {
+          "package_name": "com.example.doner"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "571005714412-o863lvcpv75gcne5akfrh4f3m4sp2udg.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.doner",
+            "certificate_hash": "f858c4d6189f478829da62c06a8fff0ebba3a009"
+          }
+        },
+        {
+          "client_id": "571005714412-uis25tv3necdmk0sulmi1joiio903g42.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC7LzvYdpYSWMp16umDWLlSWOinngjYX5U"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "571005714412-uis25tv3necdmk0sulmi1joiio903g42.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
