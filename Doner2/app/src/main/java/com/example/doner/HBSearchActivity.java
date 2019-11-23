@@ -80,6 +80,8 @@ public class HBSearchActivity extends AppCompatActivity {
         search.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                arrayList.clear();
+                arrayAdapter.notifyDataSetChanged();
                 s = String.valueOf(spinnerOrg.getSelectedItem());
                 s1 = String.valueOf(spinnerBloodType.getSelectedItem());
                 if(s1.contains("-")){
@@ -101,8 +103,7 @@ public class HBSearchActivity extends AppCompatActivity {
                                         data.addValueEventListener(new ValueEventListener() {
                                             @Override
                                             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                                                arrayList.add(dataSnapshot.getValue().toString());
-                                                arrayAdapter.notifyDataSetChanged();
+                                                arrayAdapter.add(dataSnapshot.getValue().toString());
                                             }
                                             @Override
                                             public void onCancelled(@NonNull DatabaseError databaseError) {

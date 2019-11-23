@@ -244,6 +244,7 @@
         android:id="@+id/host_page"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:visibility="visible"
         android:orientation="vertical">
         <TextView
             android:id="@+id/host_text"
@@ -453,6 +454,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:hint="Email"
+            android:inputType="textEmailAddress"
             android:textSize="20sp"
             android:textStyle="bold"
             android:textAlignment="center"/>

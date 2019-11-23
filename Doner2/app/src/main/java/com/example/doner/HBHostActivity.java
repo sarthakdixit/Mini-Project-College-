@@ -1,5 +1,6 @@
 package com.example.doner;
 
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -122,63 +123,17 @@ public class HBHostActivity extends AppCompatActivity {
         data.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                for(final DataSnapshot snap: dataSnapshot.getChildren()){
-                    if(snap.getKey().toString().equals(s)){
-                        data = FirebaseDatabase.getInstance().getReference("Hosting/"+s);
-                        data.addValueEventListener(new ValueEventListener() {
-                            @Override
-                            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                                for(final DataSnapshot snap1: dataSnapshot.getChildren()){
-                                    data = FirebaseDatabase.getInstance().getReference("Hosting/"+s+"/"+snap1.getKey().toString()+"/Date(to)");
-                                    data.addValueEventListener(new ValueEventListener() {
-                                        @Override
-                                        public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                                            if(Integer.parseInt(dataSnapshot.getValue().toString().replaceAll("-","")) >= da){
-                                                arrayAdapter.add(snap1.getKey().toString());
-                                            }
-                                        }
-
-                                        @Override
-                                        public void onCancelled(@NonNull DatabaseError databaseError) {
-
-                                        }
-                                    });
-                                }
-                            }
-
-                            @Override
-                            public void onCancelled(@NonNull DatabaseError databaseError) {
-
-                            }
-                        });
-                    }else{
-                        data = FirebaseDatabase.getInstance().getReference("Hosting/"+snap.getKey().toString());
-                        data.addValueEventListener(new ValueEventListener() {
-                            @Override
-                            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                                for(final DataSnapshot snap1: dataSnapshot.getChildren()){
-                                    data = FirebaseDatabase.getInstance().getReference("Hosting/"+snap.getKey().toString()+"/"+snap1.getKey().toString()+"/Date(to)");
-                                    data.addValueEventListener(new ValueEventListener() {
-                                        @Override
-                                        public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                                            if(Integer.parseInt(dataSnapshot.getValue().toString().replaceAll("-","")) >= da){
-                                                other_arrayAdapter.add(snap1.getKey().toString());
-                                            }
-                                        }
-
-                                        @Override
-                                        public void onCancelled(@NonNull DatabaseError databaseError) {
-
-                                        }
-                                    });
-                                }
-                            }
-
-                            @Override
-                            public void onCancelled(@NonNull DatabaseError databaseError) {
-
-                            }
-                        });
+                arrayList.clear();
+                arrayAdapter.notifyDataSetChanged();
+                other_arrayList.clear();
+                other_arrayAdapter.notifyDataSetChanged();
+                for(DataSnapshot sn1:dataSnapshot.getChildren()){
+                    String str = sn1.child("Date(to)").getValue().toString().replace("-","");
+                    String org = sn1.child("Organised By").getValue().toString();
+                    if(org.equals(s) && da < Integer.parseInt(str)){
+                        arrayAdapter.add(sn1.getKey().toString());
+                    }else if(da < Integer.parseInt(str)){
+                        other_arrayAdapter.add(sn1.getKey().toString());
                     }
                 }
             }
@@ -226,18 +181,22 @@ public class HBHostActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 if(!addEmail.getText().toString().isEmpty()){
-                    firebaseAuth = FirebaseAuth.getInstance();
-                    firebaseDatabase = FirebaseDatabase.getInstance();
-                    data = firebaseDatabase.getReference();
+                    final String sgh = addEmail.getText().toString().replaceAll("[-+.^:,.@]","") ;
                     data = FirebaseDatabase.getInstance().getReference("Hosting/"+myCamp1.getText().toString()+"/Donners");
                     data.addValueEventListener(new ValueEventListener() {
                         @Override
                         public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                            if(dataSnapshot.child(addEmail.getText().toString().replaceAll("[-+.^:,.@]","")).exists()){
-                                Toast.makeText(getApplicationContext(), "Already Donated", Toast.LENGTH_SHORT).show();
-                            }
-                            else{
-                                data.child(addEmail.getText().toString().replaceAll("[-+.^:,.@]","")).push();
+                            if(dataSnapshot.getValue().toString().contains(sgh)){
+                                Toast.makeText(getApplicationContext(), "Donated", Toast.LENGTH_SHORT).show();
+                            }else{
+                                if(dataSnapshot.getValue().toString().contains(",")){
+                                    data = FirebaseDatabase.getInstance().getReference("Hosting/"+myCamp1.getText().toString());
+                                    data.child("Donners").setValue(","+sgh);
+                                }else{
+                                    data = FirebaseDatabase.getInstance().getReference("Hosting/"+myCamp1.getText().toString());
+                                    data.child("Donners").setValue(sgh);
+                                }
+                                Toast.makeText(getApplicationContext(), "Donor Added", Toast.LENGTH_SHORT).show();
                             }
                         }
 
@@ -256,31 +215,20 @@ public class HBHostActivity extends AppCompatActivity {
         list1.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                myCampArrayList.clear();
+                myCampArrayAdapter.notifyDataSetChanged();
                 String s2 = arrayList.get(position);
                 host_page.setVisibility(View.GONE);
                 myCamp.setVisibility(View.VISIBLE);
                 myCamp1.setText(s2);
-                data = FirebaseDatabase.getInstance().getReference("Hosting/"+s+"/"+s2+"/Donners");
-                data.addChildEventListener(new ChildEventListener() {
+                data = FirebaseDatabase.getInstance().getReference("Hosting/"+s2+"/Donners");
+                data.addValueEventListener(new ValueEventListener() {
                     @Override
-                    public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
-                        myCampArrayList.add(dataSnapshot.getKey().toString());
-                        myCampArrayAdapter.notifyDataSetChanged();
-                    }
-
-                    @Override
-                    public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
-
-                    }
-
-                    @Override
-                    public void onChildRemoved(@NonNull DataSnapshot dataSnapshot) {
-
-                    }
-
-                    @Override
-                    public void onChildMoved(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
-
+                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                        String[] s = dataSnapshot.getValue().toString().split(",");
+                        for(int i=0;i<s.length;i++){
+                            myCampArrayAdapter.add(s[i]);
+                        }
                     }
 
                     @Override
@@ -298,37 +246,21 @@ public class HBHostActivity extends AppCompatActivity {
                 firebaseAuth = FirebaseAuth.getInstance();
                 firebaseDatabase = FirebaseDatabase.getInstance();
                 data = firebaseDatabase.getReference();
-                data = FirebaseDatabase.getInstance().getReference("Hosting");
+                host_page.setVisibility(View.GONE);
+                otherPage.setVisibility(View.VISIBLE);
+                data = FirebaseDatabase.getInstance().getReference("Hosting/"+s3);
                 data.addValueEventListener(new ValueEventListener() {
                     @Override
                     public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                        for(DataSnapshot sn:dataSnapshot.getChildren()){
-                            data = FirebaseDatabase.getInstance().getReference("Hosting/"+sn);
-                            data.addValueEventListener(new ValueEventListener() {
-                                @Override
-                                public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                                    if(dataSnapshot.child(s3).exists()){
-                                        other.setText(s3);
-                                        otherCampName.setText(dataSnapshot.child(s3+"/CampName").getValue().toString());
-                                        otherVenue.setText(dataSnapshot.child(s3+"/Venue").getValue().toString());
-                                        otherContact.setText(dataSnapshot.child(s3+"/Contact").getValue().toString());
-                                        otherRewardDonner.setText(dataSnapshot.child(s3+"/Reward").getValue().toString());
-                                        otherDateFrom.setText(dataSnapshot.child(s3+"/Date(from)").getValue().toString());
-                                        otherDateTo.setText(dataSnapshot.child(s3+"/Date(to)").getValue().toString());
-                                        otherTiming.setText(dataSnapshot.child(s3+"/Timing").getValue().toString());
-                                        myCamp.setVisibility(View.GONE);
-                                        otherPage.setVisibility(View.VISIBLE);
-                                    }
-                                }
-
-                                @Override
-                                public void onCancelled(@NonNull DatabaseError databaseError) {
-
-                                }
-                            });
-                        }
+                        other.setText(s3);
+                        otherCampName.setText(s3);
+                        otherVenue.setText(dataSnapshot.child("Venue").getValue().toString());
+                        otherContact.setText(dataSnapshot.child("Contact").getValue().toString());
+                        otherRewardDonner.setText(dataSnapshot.child("Reward").getValue().toString());
+                        otherDateFrom.setText(dataSnapshot.child("Date(from)").getValue().toString());
+                        otherDateTo.setText(dataSnapshot.child("Date(to)").getValue().toString());
+                        otherTiming.setText(dataSnapshot.child("Timing").getValue().toString());
                     }
-
                     @Override
                     public void onCancelled(@NonNull DatabaseError databaseError) {
 
@@ -341,14 +273,14 @@ public class HBHostActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 otherPage.setVisibility(View.GONE);
-                myCamp.setVisibility(View.VISIBLE);
+                host_page.setVisibility(View.VISIBLE);
             }
         });
 
         list3.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                final String s3 = myCampArrayList.get(position);
+                final String s3 = myCampArrayList.get(position).replaceAll("[-+.^:,.@]","");
                 myCamp.setVisibility(View.GONE);
                 donnerDetails.setVisibility(View.VISIBLE);
                 donner.setText(s3);
@@ -356,7 +288,7 @@ public class HBHostActivity extends AppCompatActivity {
                 data.addValueEventListener(new ValueEventListener() {
                     @Override
                     public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                        if(dataSnapshot.child(s3.replaceAll("[-+.^:,.@]","")).exists()){
+                        if(dataSnapshot.child(s3).exists()){
                             donner_address.setText(dataSnapshot.child(s3+"/UserAddress").getValue().toString());
                             donner_bloodType.setText(dataSnapshot.child(s3+"/UserBloodType").getValue().toString());
                             donner_contact.setText(dataSnapshot.child(s3+"/UserPhoneNumber").getValue().toString());
@@ -382,15 +314,18 @@ public class HBHostActivity extends AppCompatActivity {
                 if(Empty()){
                     firebaseAuth = FirebaseAuth.getInstance();
                     firebaseDatabase = FirebaseDatabase.getInstance();
-                    data = firebaseDatabase.getReference();
+                    data = firebaseDatabase.getReference("Hosting");
                     String s1 = campName.getText().toString().replaceAll("[-+.^:,.@]","");
-                    data.child("Hosting/"+s+"/"+s1+"/CampName").setValue(campName.getText().toString());
-                    data.child("Hosting/"+s+"/"+s1+"/Venue").setValue(venue.getText().toString());
-                    data.child("Hosting/"+s+"/"+s1+"/Contact").setValue(contact.getText().toString());
-                    data.child("Hosting/"+s+"/"+s1+"/Reward").setValue(rewardDonner.getText().toString());
-                    data.child("Hosting/"+s+"/"+s1+"/Date(from)").setValue(date_from.getText().toString());
-                    data.child("Hosting/"+s+"/"+s1+"/Date(to)").setValue(date_to.getText().toString());
-                    data.child("Hosting/"+s+"/"+s1+"/Timing").setValue(timing.getText().toString());
+                    data = firebaseDatabase.getReference("Hosting/"+s1);
+                    data.child("Venue").setValue(venue.getText().toString());
+                    data.child("Contact").setValue(contact.getText().toString());
+                    data.child("Reward").setValue(rewardDonner.getText().toString());
+                    data.child("Date(from)").setValue(date_from.getText().toString());
+                    data.child("Date(to)").setValue(date_to.getText().toString());
+                    data.child("Timing").setValue(timing.getText().toString());
+                    data.child("Organised By").setValue(s);
+                    data.child("Donners").push();
+                    data.child("Donners/asd").setValue("asd");
                     campName.setText("");
                     venue.setText("");
                     contact.setText("");
@@ -398,8 +333,7 @@ public class HBHostActivity extends AppCompatActivity {
                     date_from.setText("");
                     date_to.setText("");
                     timing.setText("");
-                    host1.setVisibility(View.GONE);
-                    host_page.setVisibility(View.VISIBLE);
+                    startActivity(new Intent(HBHostActivity.this, HospitalBloodBankSetting.class));
                 }
             }
         });

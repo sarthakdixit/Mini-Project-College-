@@ -94,55 +94,6 @@ public class DonnerPage extends AppCompatActivity {
             }
         });
 
-        sc.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                data = FirebaseDatabase.getInstance().getReference("Hosting");
-                data.addValueEventListener(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                        for(final DataSnapshot snap:dataSnapshot.getChildren()){
-                            Toast.makeText(getApplicationContext(), snap.getKey().toString(), Toast.LENGTH_SHORT).show();
-                            data = FirebaseDatabase.getInstance().getReference("Hosting/"+snap);
-                            data.addValueEventListener(new ValueEventListener() {
-                                @Override
-                                public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                                    for(final DataSnapshot snap1:dataSnapshot.getChildren()){
-                                        Toast.makeText(getApplicationContext(), snap1.getKey().toString(), Toast.LENGTH_SHORT).show();
-                                        data = FirebaseDatabase.getInstance().getReference("Hosting/"+snap+"/"+snap1);
-                                        data.addValueEventListener(new ValueEventListener() {
-                                            @Override
-                                            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                                                if(Integer.parseInt(dataSnapshot.child("Date(to)").getValue().toString()) >= da){
-                                                    arrayAdapter.add(snap1.getKey().toString());
-                                                }
-                                            }
-
-                                            @Override
-                                            public void onCancelled(@NonNull DatabaseError databaseError) {
-
-                                            }
-                                        });
-                                    }
-                                }
-
-                                @Override
-                                public void onCancelled(@NonNull DatabaseError databaseError) {
-
-                                }
-                            });
-                        }
-                    }
-
-                    @Override
-                    public void onCancelled(@NonNull DatabaseError databaseError) {
-
-                    }
-                });
-
-            }
-        });
-
         date = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(new Date());
         da = Integer.parseInt(date.replaceAll("-",""));
 
@@ -154,10 +105,15 @@ public class DonnerPage extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 if(!ed.getText().toString().isEmpty()){
-                    data = FirebaseDatabase.getInstance().getReference("Donner");
-                    data.child(s+"/Blood Type").setValue(ed.getText().toString());
-                    bloodtt.setVisibility(View.GONE);
-                    donn.setVisibility(View.VISIBLE);
+                    String str = null ;
+                    if(ed.getText().toString().contains("-")){
+                        str = ed.getText().toString().replace("-","negative");
+                    }else{
+                        str = ed.getText().toString().replace("+","positive");
+                    }
+                    data = FirebaseDatabase.getInstance().getReference(str);
+                    data.child(s).setValue("asd");
+
                 }
             }
         });
@@ -200,46 +156,59 @@ public class DonnerPage extends AppCompatActivity {
             }
         });
 
+        data = FirebaseDatabase.getInstance().getReference("Hosting");
+        data.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                for(DataSnapshot sn1: dataSnapshot.getChildren()){
+                    if(da < Integer.parseInt(sn1.child("Date(to)").getValue().toString().replaceAll("-",""))){
+                        arrayAdapter.add(sn1.getKey().toString());
+                    }
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+            }
+        });
+
         list4.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                donn.setVisibility(View.GONE);
+                dPage.setVisibility(View.VISIBLE);
                 final String s2 = arrayList.get(position);
-                data = FirebaseDatabase.getInstance().getReference("Hosting");
+                data = FirebaseDatabase.getInstance().getReference("Hosting/"+s2);
                 data.addValueEventListener(new ValueEventListener() {
                     @Override
                     public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                        for(DataSnapshot snap3:dataSnapshot.getChildren()){
-                            data = FirebaseDatabase.getInstance().getReference("Hosting/"+snap3);
-                            data.addValueEventListener(new ValueEventListener() {
-                                @Override
-                                public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                                    if(dataSnapshot.child(s2).exists()){
-                                        dPage.setVisibility(View.VISIBLE);
-                                        donn.setVisibility(View.GONE);
-                                        d.setText(data.child(s2).getKey().toString());
-                                        campname.setText(dataSnapshot.child(s2+"/CampName").getValue().toString());
-                                        venue.setText(dataSnapshot.child(s2+"/Venue").getValue().toString());
-                                        contact.setText(dataSnapshot.child(s2+"/Contact").getValue().toString());
-                                        reward.setText(dataSnapshot.child(s2+"/Reward").getValue().toString());
-                                        dateFrom.setText(dataSnapshot.child(s2+"/Date(from)").getValue().toString());
-                                        dateTo.setText(dataSnapshot.child(s2+"/Date(to)").getValue().toString());
-                                        timing.setText(dataSnapshot.child(s2+"/Timing").getValue().toString());
-                                        if(dataSnapshot.child(s2+"/Donners"+s).exists()){
-                                            icc.setImageResource(R.drawable.uj);
-                                            dd.setText("Donnated");
-                                        }else{
-                                            icc.setImageResource(R.drawable.ui);
-                                            dd.setText("Not Donnated");
-                                        }
-                                    }
+                        d.setText(s2);
+                        campname.setText(s2);
+                        venue.setText(dataSnapshot.child("Venue").getValue().toString());
+                        contact.setText(dataSnapshot.child("Contact").getValue().toString());
+                        reward.setText(dataSnapshot.child("Reward").getValue().toString());
+                        dateFrom.setText(dataSnapshot.child("Date(from)").getValue().toString());
+                        dateTo.setText(dataSnapshot.child("Date(to)").getValue().toString());
+                        timing.setText(dataSnapshot.child("Timing").getValue().toString());
+                        data = FirebaseDatabase.getInstance().getReference("Hosting/"+s2+"/Donners");
+                        data.addValueEventListener(new ValueEventListener() {
+                            @Override
+                            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                                if(dataSnapshot.getValue().toString().contains(s)){
+                                    icc.setImageResource(R.drawable.uj);
+                                    dd.setText("Donated");
+                                }else{
+                                    icc.setImageResource(R.drawable.ui);
+                                    dd.setText("Not Donated");
                                 }
+                            }
 
-                                @Override
-                                public void onCancelled(@NonNull DatabaseError databaseError) {
+                            @Override
+                            public void onCancelled(@NonNull DatabaseError databaseError) {
 
-                                }
-                            });
-                        }
+                            }
+                        });
                     }
 
                     @Override
